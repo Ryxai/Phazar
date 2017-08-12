@@ -3,11 +3,11 @@ import numpy as np
 from scipy import fft, ifft
 from itertools import accumulate
 
-def scale(arr, sample_rate, factor)  :
+def pitch_time_mod(arr, sample_rate, factor)  :
     return resampy.resample(np.asarray(arr, np.float32), sample_rate,
                             int(sample_rate * factor), axis=-1)
 
-def strech(arr, factor, win_size=1024, hop=None):
+def time_mod(arr, factor, win_size=1024, hop=None):
     if not hop:
         hop = float(win_size) * 0.25
     window = np.hanning(win_size)
@@ -46,14 +46,12 @@ def pitch_mod(arr, sample_rate, factor=None, source_Hz=None, out_Hz=None):
     win_size = 1024
     while win_size < 32:
         try:
-            arr = strech(arr, factor, win_size=win_size)
+            arr = time_mod(arr, factor, win_size=win_size)
             break
         except RuntimeError:
             win_size = win_size/2
-    return scale(arr, sample_rate, 1/float(factor))
+    return pitch_time_mod(arr, sample_rate, 1 / float(factor))
 
-def time_mod(arr, rate, factor):
-    return scale(arr, rate, factor)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(
@@ -66,13 +64,17 @@ if __name__=="__main__":
                            help="amount to scale the pitch by > 0")
     parser.add_argument("--speed","-s", type=float, default=1,
                             help="amount to scale the time by")
+    parser.add_argument("--time", "-t", type=float, default=1,
+                            help="amount to strech time scale by")
     args = parser.parse_args()
     wav, rate = librosa.load(args.input)
     wav = librosa.core.to_mono(wav)
     if args.pitch != 1:
         wav = pitch_mod(wav, rate, factor=args.pitch)
     if args.speed != 1:
-        wav = time_mod(wav, rate, 1/float(args.speed))
+        wav = pitch_time_mod(wav, rate, 1 / float(args.speed))
+    if args.time != 1:
+        wav = pitch_time_mod(wav, rate)
     if not args.output:
         for bit in wav:
             print(bit)
