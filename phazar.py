@@ -1,5 +1,4 @@
-import argparse, resampy
-import librosa
+import argparse, resampy, librosa
 import numpy as np
 from scipy import fft, ifft
 from itertools import accumulate
@@ -32,8 +31,6 @@ def strech(arr, factor, win_size=1024, hop=None):
     print(len(x))
     print(len(corrected * win_size))
     for i, j in enumerate(range(0, len(x) - win_size, int(factor * hop))):
-       # print(len(x[j:j+win_size]))
-        #print(len(corrected[i]))
         x[j: j + win_size] += corrected[i]
     return x
 
